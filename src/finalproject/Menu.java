@@ -23,7 +23,16 @@ import java.util.Vector;
 import java.text.SimpleDateFormat;
 import java.text.MessageFormat;
 import javax.swing.JTable;
-        
+import java.awt.GridLayout;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JComboBox;
+import javax.swing.JButton;
+import java.util.ArrayList;
+import java.util.List;
         
 /**
  *
@@ -32,19 +41,93 @@ import javax.swing.JTable;
 public class Menu extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Menu.class.getName());
-
     /**
      * Creates new form Menu
      */
     
+
+ // === PURE JAVA DATA STORAGE ===
+    private List<User> users = new ArrayList<>();
+    private List<SimpleRecipe> recipes = new ArrayList<>();
+    private List<String> favorites = new ArrayList<>(); // Store as "userId_recipeId"
+    private List<String> reviews = new ArrayList<>(); // Store as "userId_recipeId_rating_comment"
+    
+    private User currentUser;
+    private int nextUserId = 1;
+    private int nextRecipeId = 1;
+    
+    int x = 210;
+    
+    // Simple User class
+    class User {
+        private int userId;
+        private String username;
+        private String email;
+        private String password;
+        
+        public User(int userId, String username, String email, String password) {
+            this.userId = userId;
+            this.username = username;
+            this.email = email;
+            this.password = password;
+        }
+        
+        // Getters
+        public int getUserId() { return userId; }
+        public String getUsername() { return username; }
+        public String getEmail() { return email; }
+        public String getPassword() { return password; }
+    }
+    
+    // Simple Recipe inner class
+    class SimpleRecipe {
+        private int recipeId;
+        private int userId;
+        private String title;
+        private String cuisine;
+        private String cookingTime;
+        private int servingSize;
+        private String ingredients;
+        private String steps;
+        private String category;
+        
+        public SimpleRecipe(int recipeId, int userId, String title, String cuisine, 
+                           String cookingTime, int servingSize, String ingredients, 
+                           String steps, String category) {
+            this.recipeId = recipeId;
+            this.userId = userId;
+            this.title = title;
+            this.cuisine = cuisine;
+            this.cookingTime = cookingTime;
+            this.servingSize = servingSize;
+            this.ingredients = ingredients;
+            this.steps = steps;
+            this.category = category;
+        }
+        
+        // Getters
+        public int getRecipeId() { return recipeId; }
+        public int getUserId() { return userId; }
+        public String getTitle() { return title; }
+        public String getCuisine() { return cuisine; }
+        public String getCookingTime() { return cookingTime; }
+        public int getServingSize() { return servingSize; }
+        public String getIngredients() { return ingredients; }
+        public String getSteps() { return steps; }
+        public String getCategory() { return category; }
+    }
 
     Connection sqlConn = null;
     PreparedStatement pst = null;
     ResultSet rs = null;
     int q, i, id, deleteItem;
     
-    public Menu() {
+     public Menu() {
         initComponents();
+        addUserFeatures();
+        
+        // Add some sample data
+        addSampleData();
         
 //        addWindowListener(new java.awt.event.WindowAdapter() {
 //        @Override
@@ -59,7 +142,7 @@ public class Menu extends javax.swing.JFrame {
 //            setScaledImage("C:\\Users\\thoan\\OneDrive\\Documents\\NetBeansProjects\\FinalProject\\src\\Images\\bars-1.png", BarLabel);
 //        }
 //    });
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+          jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null},
                 {null, null, null, null, null, null},
@@ -70,9 +153,328 @@ public class Menu extends javax.swing.JFrame {
                 "ID", "Name", "Cuisine", "Time", "Ingredients", "Steps"
             }
         ));
-        upDateDB();
+        upDateTable();
+    }
+    
+ // === ADD SAMPLE DATA ===
+    private void addSampleData() {
+        // Add a sample user
+        users.add(new User(1, "admin", "admin@example.com", "password"));
+        
+        // Add sample recipes
+        recipes.add(new SimpleRecipe(1, 1, "Spaghetti Carbonara", "Italian", 
+            "30 mins", 4, "Spaghetti, Eggs, Bacon, Cheese", 
+            "1. Cook pasta 2. Mix eggs and cheese 3. Combine with bacon", "Main Courses"));
+        
+        recipes.add(new SimpleRecipe(2, 1, "Chocolate Cake", "American", 
+            "60 mins", 8, "Flour, Sugar, Cocoa, Eggs, Milk", 
+            "1. Mix dry ingredients 2. Add wet ingredients 3. Bake at 350°F", "Desserts"));
+        
+        nextUserId = 2;
+        nextRecipeId = 3;
     }
 
+ // === PURE JAVA USER MANAGEMENT ===
+    
+    private void addUserFeatures() {
+    JPanel userPanel = new JPanel(new GridLayout(6, 1, 5, 5));
+    
+    JButton btnLogin = new JButton("Login");
+    btnLogin.addActionListener(e -> {
+        if (currentUser == null) {
+            showLoginDialog();
+        } else {
+            JOptionPane.showMessageDialog(this, "Already logged in as: " + currentUser.getUsername());
+        }
+    });
+    userPanel.add(btnLogin);
+    
+    JButton btnRegister = new JButton("Register");
+    btnRegister.addActionListener(e -> showRegisterDialog());
+    userPanel.add(btnRegister);
+    
+    JButton btnEnhancedAdd = new JButton("Add Enhanced Recipe");
+    btnEnhancedAdd.addActionListener(e -> showEnhancedRecipeDialog());
+    userPanel.add(btnEnhancedAdd);
+    
+    JButton btnAddFavorite = new JButton("Add to Favorites");
+    btnAddFavorite.addActionListener(e -> addToFavorites());
+    userPanel.add(btnAddFavorite);
+    
+    JButton btnFavorites = new JButton("My Favorites");
+    btnFavorites.addActionListener(e -> showFavorites());
+    userPanel.add(btnFavorites);
+    
+    JButton btnAddReview = new JButton("Add Review");
+    btnAddReview.addActionListener(e -> addReview());
+    userPanel.add(btnAddReview);
+    
+    // FIX: Add with proper constraints
+    jPanel2.add(userPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 250, 190, 200));
+    jPanel2.revalidate();
+    jPanel2.repaint();
+}
+    
+     private boolean showLoginDialog() {
+        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+        
+        JTextField txtUsername = new JTextField();
+        JPasswordField txtPassword = new JPasswordField();
+        
+        panel.add(new JLabel("Username:"));
+        panel.add(txtUsername);
+        panel.add(new JLabel("Password:"));
+        panel.add(txtPassword);
+        
+        int result = JOptionPane.showConfirmDialog(this, panel, "Login", 
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        
+        if (result == JOptionPane.OK_OPTION) {
+            String username = txtUsername.getText();
+            String password = new String(txtPassword.getPassword());
+            
+            // Simple authentication - check users list
+            for (User user : users) {
+                if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
+                    currentUser = user;
+                    setTitle("Recipe Manager - Welcome " + user.getUsername());
+                    JOptionPane.showMessageDialog(this, "Login successful!");
+                    return true;
+                }
+            }
+            JOptionPane.showMessageDialog(this, "Invalid username or password.");
+        }
+        return false;
+    }
+     
+     
+      private void showRegisterDialog() {
+        JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
+        
+        JTextField txtUsername = new JTextField();
+        JTextField txtEmail = new JTextField();
+        JPasswordField txtPassword = new JPasswordField();
+        JPasswordField txtConfirmPassword = new JPasswordField();
+        
+        panel.add(new JLabel("Username:"));
+        panel.add(txtUsername);
+        panel.add(new JLabel("Email:"));
+        panel.add(txtEmail);
+        panel.add(new JLabel("Password:"));
+        panel.add(txtPassword);
+        panel.add(new JLabel("Confirm Password:"));
+        panel.add(txtConfirmPassword);
+        
+        int result = JOptionPane.showConfirmDialog(this, panel, "Register", 
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        
+        if (result == JOptionPane.OK_OPTION) {
+            String username = txtUsername.getText().trim();
+            String email = txtEmail.getText().trim();
+            String password = new String(txtPassword.getPassword());
+            String confirmPassword = new String(txtConfirmPassword.getPassword());
+            
+            if (!password.equals(confirmPassword)) {
+                JOptionPane.showMessageDialog(this, "Passwords do not match.");
+                return;
+            }
+            
+            // Check if username already exists
+            for (User user : users) {
+                if (user.getUsername().equals(username)) {
+                    JOptionPane.showMessageDialog(this, "Username already exists.");
+                    return;
+                }
+            }
+            
+            // Create new user
+            User newUser = new User(nextUserId++, username, email, password);
+            users.add(newUser);
+            JOptionPane.showMessageDialog(this, "Registration successful! Please login.");
+        }
+    }
+      
+      
+      // === PURE JAVA RECIPE MANAGEMENT ===
+    
+    private void showEnhancedRecipeDialog() {
+        if (currentUser == null) {
+            JOptionPane.showMessageDialog(this, "Please login first.");
+            return;
+        }
+        
+        JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
+        
+        JTextField txtTitle = new JTextField();
+        JTextField txtCuisine = new JTextField();
+        JTextField txtTime = new JTextField();
+        JTextField txtServing = new JTextField();
+        JTextArea txtIngredients = new JTextArea(3, 20);
+        JTextArea txtSteps = new JTextArea(3, 20);
+        
+        JComboBox<String> cmbCategory = new JComboBox<>(new String[]{
+            "Select Category", "Appetizers", "Main Courses", "Desserts", "Salads", 
+            "Soups", "Side Dishes", "Breakfast", "Beverages"
+        });
+        
+        panel.add(new JLabel("Title*:"));
+        panel.add(txtTitle);
+        panel.add(new JLabel("Cuisine:"));
+        panel.add(txtCuisine);
+        panel.add(new JLabel("Cooking Time:"));
+        panel.add(txtTime);
+        panel.add(new JLabel("Serving Size:"));
+        panel.add(txtServing);
+        panel.add(new JLabel("Category*:"));
+        panel.add(cmbCategory);
+        panel.add(new JLabel("Ingredients:"));
+        panel.add(new JScrollPane(txtIngredients));
+        panel.add(new JLabel("Steps:"));
+        panel.add(new JScrollPane(txtSteps));
+        
+        int result = JOptionPane.showConfirmDialog(this, panel, "Add Enhanced Recipe", 
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        
+        if (result == JOptionPane.OK_OPTION) {
+            if (txtTitle.getText().trim().isEmpty() || cmbCategory.getSelectedIndex() == 0) {
+                JOptionPane.showMessageDialog(this, "Title and Category are required.");
+                return;
+            }
+            
+            // Create new recipe
+            SimpleRecipe newRecipe = new SimpleRecipe(
+                nextRecipeId++,
+                currentUser.getUserId(),
+                txtTitle.getText().trim(),
+                txtCuisine.getText().trim(),
+                txtTime.getText().trim(),
+                txtServing.getText().isEmpty() ? 0 : Integer.parseInt(txtServing.getText().trim()),
+                txtIngredients.getText().trim(),
+                txtSteps.getText().trim(),
+                cmbCategory.getSelectedItem().toString()
+            );
+            
+            recipes.add(newRecipe);
+            JOptionPane.showMessageDialog(this, "Recipe saved successfully!");
+            upDateTable();
+        }
+    }
+    
+    
+    private void addToFavorites() {
+        if (currentUser == null) {
+            JOptionPane.showMessageDialog(this, "Please login first.");
+            return;
+        }
+        
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a recipe first.");
+            return;
+        }
+        
+        try {
+            int recipeId = Integer.parseInt(jTable1.getValueAt(selectedRow, 0).toString());
+            String favoriteKey = currentUser.getUserId() + "_" + recipeId;
+            
+            if (!favorites.contains(favoriteKey)) {
+                favorites.add(favoriteKey);
+                JOptionPane.showMessageDialog(this, "Added to favorites!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Already in favorites!");
+            }
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error adding to favorites: " + ex.getMessage());
+        }
+    }
+    
+    private void showFavorites() {
+        if (currentUser == null) {
+            JOptionPane.showMessageDialog(this, "Please login first.");
+            return;
+        }
+        
+        StringBuilder favoritesList = new StringBuilder();
+        for (String favoriteKey : favorites) {
+            if (favoriteKey.startsWith(currentUser.getUserId() + "_")) {
+                int recipeId = Integer.parseInt(favoriteKey.split("_")[1]);
+                for (SimpleRecipe recipe : recipes) {
+                    if (recipe.getRecipeId() == recipeId) {
+                        favoritesList.append("• ").append(recipe.getTitle())
+                                .append(" (").append(recipe.getCuisine()).append(")\n");
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (favoritesList.length() == 0) {
+            JOptionPane.showMessageDialog(this, "You have no favorite recipes yet.");
+        } else {
+            JOptionPane.showMessageDialog(this, "Your Favorite Recipes:\n\n" + favoritesList.toString());
+        }
+    }
+    
+    private void addReview() {
+        if (currentUser == null) {
+            JOptionPane.showMessageDialog(this, "Please login first.");
+            return;
+        }
+        
+        int selectedRow = jTable1.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a recipe first.");
+            return;
+        }
+        
+        try {
+            int recipeId = Integer.parseInt(jTable1.getValueAt(selectedRow, 0).toString());
+            String recipeName = jTable1.getValueAt(selectedRow, 1).toString();
+            
+            JPanel panel = new JPanel(new GridLayout(3, 1, 5, 5));
+            
+            JComboBox<Integer> ratingCombo = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+            JTextArea commentArea = new JTextArea(3, 30);
+            
+            panel.add(new JLabel("Rating for '" + recipeName + "':"));
+            panel.add(ratingCombo);
+            panel.add(new JLabel("Comment:"));
+            panel.add(new JScrollPane(commentArea));
+            
+            int result = JOptionPane.showConfirmDialog(this, panel, "Add Review", 
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            
+            if (result == JOptionPane.OK_OPTION) {
+                String reviewKey = currentUser.getUserId() + "_" + recipeId + "_" + 
+                                 ratingCombo.getSelectedItem() + "_" + commentArea.getText().trim();
+                reviews.add(reviewKey);
+                JOptionPane.showMessageDialog(this, "Review added successfully!");
+            }
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error adding review: " + ex.getMessage());
+        }
+    }
+    
+    
+     // === UPDATE TABLE METHOD ===
+    public void upDateTable(){
+        DefaultTableModel RecordTable = (DefaultTableModel) jTable1.getModel();
+        RecordTable.setRowCount(0);
+
+        for (SimpleRecipe recipe : recipes) {
+            Vector<Object> columnData = new Vector<>();
+            columnData.add(recipe.getRecipeId());
+            columnData.add(recipe.getTitle());
+            columnData.add(recipe.getCuisine());
+            columnData.add(recipe.getCookingTime());
+            columnData.add(recipe.getIngredients());
+            columnData.add(recipe.getSteps());
+            RecordTable.addRow(columnData);
+        }
+    }
+    
     
     //====func===//
     public void upDateDB(){
@@ -112,6 +514,7 @@ public class Menu extends javax.swing.JFrame {
             ex.printStackTrace();
         }
     }
+    
     //====end func===//
     /**
      * This method is called from within the constructor to initialize the form.
@@ -414,9 +817,11 @@ public class Menu extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-    int x = 210;
+  
+ 
+  
     private void BarLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_BarLabelMouseClicked
-        // TODO add your handling code here:
+    // TODO add your handling code here:
         if(x == 210){
             jPanel2.setSize(210, 522);
             Thread th = new Thread(){
@@ -685,10 +1090,23 @@ private void setScaledImage(String imagePath, javax.swing.JLabel label) {
     Image scaledImg = img.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
     label.setIcon(new ImageIcon(scaledImg));
 }
-    /**
+
+
+  /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+         /* Set the Nimbus look and feel */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+            logger.log(java.util.logging.Level.SEVERE, null, ex);
+        }
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -707,7 +1125,21 @@ private void setScaledImage(String imagePath, javax.swing.JLabel label) {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new Menu().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> {
+            Menu menu = new Menu();
+            menu.setVisible(true);
+            
+            // Auto-show login dialog on startup
+            if (!menu.showLoginDialog()) {
+                int result = JOptionPane.showConfirmDialog(menu, 
+                    "No user logged in. Would you like to register?", 
+                    "Welcome", JOptionPane.YES_NO_OPTION);
+                
+                if (result == JOptionPane.YES_OPTION) {
+                    menu.showRegisterDialog();
+                }
+            }
+        });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
