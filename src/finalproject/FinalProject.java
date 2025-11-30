@@ -16,6 +16,7 @@ public class FinalProject {
 
       
         java.awt.EventQueue.invokeLater(() -> {
+            DBConnection.getConnection();
             new Menu().setVisible(true); 
         });
     }

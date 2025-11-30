@@ -152,7 +152,7 @@ setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
     try {
         Connection conn = DBConnection.getConnection();
-        String sql = "SELECT * FROM connector WHERE Name LIKE ? OR Cuisine LIKE ?";
+        String sql = "SELECT * FROM connector.recipes WHERE Name LIKE ? OR Cuisine LIKE ?";
         PreparedStatement pst = conn.prepareStatement(sql);
         pst.setString(1, "%" + keyword + "%");
         pst.setString(2, "%" + keyword + "%");
@@ -185,9 +185,7 @@ setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
     private void btnBackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBackActionPerformed
         this.dispose();  
-    new Menu().setVisible(true);  
-
-        // TODO add your handling code here:
+    // TODO add your handling code here:
     }//GEN-LAST:event_btnBackActionPerformed
 
     /**

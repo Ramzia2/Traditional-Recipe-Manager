@@ -127,7 +127,7 @@ public class Menu extends javax.swing.JFrame {
         addUserFeatures();
         
         // Add some sample data
-        addSampleData();
+        //addSampleData();
         
 //        addWindowListener(new java.awt.event.WindowAdapter() {
 //        @Override
@@ -483,7 +483,7 @@ public class Menu extends javax.swing.JFrame {
         sqlConn = DBConnection.getConnection();
 
         // 2️⃣ Query data
-        pst = sqlConn.prepareStatement("SELECT * FROM connector");
+        pst = sqlConn.prepareStatement("SELECT * FROM connector.recipes");
         ResultSet rs = pst.executeQuery();
         ResultSetMetaData stData = rs.getMetaData();
         int q = stData.getColumnCount();
@@ -584,7 +584,7 @@ public class Menu extends javax.swing.JFrame {
                 labelGoogleIcon2MouseClicked(evt);
             }
         });
-        jPanel2.add(labelGoogleIcon2, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 20, -1, -1));
+        jPanel2.add(labelGoogleIcon2, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 20, 50, 50));
 
         labelGoogleIcon1.setForeground(new java.awt.Color(153, 204, 255));
         labelGoogleIcon1.setText("Chat");
@@ -600,6 +600,11 @@ public class Menu extends javax.swing.JFrame {
         labelGoogleIcon4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         labelGoogleIcon4.setGoogleIcon(icon.GoogleMaterialDesignIcons.LANGUAGE);
         labelGoogleIcon4.setIconColor(new java.awt.Color(153, 204, 255));
+        labelGoogleIcon4.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                labelGoogleIcon4MouseClicked(evt);
+            }
+        });
         jPanel2.add(labelGoogleIcon4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 70, 110, 40));
 
         labelGoogleIcon5.setForeground(new java.awt.Color(153, 204, 255));
@@ -621,7 +626,7 @@ public class Menu extends javax.swing.JFrame {
         labelGoogleIcon6.setIconColor(new java.awt.Color(153, 204, 255));
         jPanel2.add(labelGoogleIcon6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 150, 110, 40));
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 0, 210, 522));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 90, 210, 522));
 
         labelGoogleIcon3.setGoogleIcon(icon.GoogleMaterialDesignIcons.MENU);
         labelGoogleIcon3.setIconColor(new java.awt.Color(102, 102, 102));
@@ -894,7 +899,7 @@ public class Menu extends javax.swing.JFrame {
     private void jbtnExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnExitActionPerformed
         // TODO add your handling code here:
         frame = new JFrame("Exit");
-        if(JOptionPane.showConfirmDialog(frame, "Confirm if you want to exit", "MySQL Connector ",
+        if(JOptionPane.showConfirmDialog(frame, "Confirm if you want to exit", "MySQL recipes ",
                 JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION)
         {
             System.exit(0);
@@ -916,7 +921,7 @@ public class Menu extends javax.swing.JFrame {
         try{
             sqlConn = DBConnection.getConnection();
             
-            pst = sqlConn.prepareStatement("insert into connector(Name, Cuisine, Time, Ingredients, Steps)value(?, ?, ?, ?, ?)");
+            pst = sqlConn.prepareStatement("insert into recipes(Name, Cuisine, Time, Ingredients, Steps)value(?, ?, ?, ?, ?)");
         
             pst.setString(1, nameTF.getText());
             pst.setString(2, cuisineTF.getText());
@@ -1037,9 +1042,10 @@ public class Menu extends javax.swing.JFrame {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 sqlConn = DBConnection.getConnection();
                 // Prepare and execute the DELETE statement
-                pst = sqlConn.prepareStatement("delete from connector where ID=?");
+                pst = sqlConn.prepareStatement("delete from connector.recipes where ID=?");
                 pst.setInt(1, id);
                 pst.executeUpdate();
+               
                 
                 JOptionPane.showMessageDialog(this, "Recipe Record Deleted successfully!");
 
@@ -1068,6 +1074,10 @@ public class Menu extends javax.swing.JFrame {
     searchWindow.setVisible(true);
         // TODO add your handling code here:
     }//GEN-LAST:event_labelGoogleIcon5MouseClicked
+
+    private void labelGoogleIcon4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_labelGoogleIcon4MouseClicked
+     new CountriesPage().setVisible(true);
+    }//GEN-LAST:event_labelGoogleIcon4MouseClicked
 private void setScaledImage(String imagePath, javax.swing.JLabel label) {
     ImageIcon icon = new ImageIcon(imagePath);
     Image img = icon.getImage();

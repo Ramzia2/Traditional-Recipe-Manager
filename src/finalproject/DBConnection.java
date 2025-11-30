@@ -34,7 +34,6 @@ public class DBConnection {
             String username = props.getProperty("username");
             String password = props.getProperty("password");
             String url = props.getProperty("url");
-
             conn = DriverManager.getConnection(url, username, password);
             return conn;
 
